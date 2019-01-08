@@ -50,6 +50,7 @@ Version 0.017
 our $VERSION = '0.017';
 
 our %files_being_mocked;
+my $enforce_file_path;
 
 # From http://man7.org/linux/man-pages/man7/inode.7.html
 use constant S_IFMT    => 0170000;    # bit mask for the file type bit field
@@ -175,6 +176,14 @@ sub _strict_mode_violation {
 
 sub import {
     my ( $class, @args ) = @_;
+
+    # Require parent dirs before allowing file or object creation below that.
+    if ( grep { $_ =~ m/filesys/i } @args ) {
+        $enforce_file_path = 1;
+    }
+    else {
+        $enforce_file_path = 0;
+    }
 
     if ( grep { $_ =~ m/strict/i } @args ) {
         add_file_access_hook( \&_strict_mode_violation );
